@@ -8,19 +8,6 @@ packages live under `tooling/`.
 
 Use the `ci` command to validate code changes (format, lint, type-check, build).
 
-## Code style
-
-### Comments
-
-**Default to zero comments.** Write one only when the information is essential and
-cannot be inferred from the code itself. If unsure, it is not needed.
-
-### Functions
-
-**Default to inlining logic.** Reading straight down and having logic be co-located
-beats jumping between definitions. A function that is e.g. only used once or twice
-and exists only to name a few lines is a cost, not a cleanup.
-
 ## Vendored Repositories
 
 This project vendors external repositories of key libraries as git subtrees under
