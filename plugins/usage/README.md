@@ -31,8 +31,8 @@ heading also shows the plan and the signed-in account's email, so it is easy to 
 which account is active when switching between several. The report is kept in the
 session transcript and is not sent to the model.
 
-When the selected model belongs to a supported provider, a compact widget shows its
-limits above the editor.
+A compact widget shows limits for the configured providers above the editor,
+regardless of the selected model.
 
 ## Supported providers
 
@@ -52,10 +52,12 @@ Optionally create `<agent-dir>/extensions/usage.json`, typically
 
 ```json
 {
-  "showWidget": true
+  "showWidget": true,
+  "widgetProviders": ["claude", "codex"]
 }
 ```
 
-| Setting      | Description                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------- |
-| `showWidget` | Show rate-limit bars above the editor. Set to `false` to hide them; `/usage` remains available. |
+| Setting           | Description                                                                                                                              |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `showWidget`      | Show rate-limit bars above the editor. Set to `false` to hide them; `/usage` remains available.                                          |
+| `widgetProviders` | Providers shown in the widget: `claude`, `codex`, `zai`, or `zai-coding-cn`. Unknown IDs are ignored. Defaults to `["claude", "codex"]`. |
