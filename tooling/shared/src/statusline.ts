@@ -1,10 +1,12 @@
-import type { ExtensionContext } from '@earendil-works/pi-coding-agent'
+import type { ExtensionContext, Theme } from '@earendil-works/pi-coding-agent'
+import { sliceByColumn, visibleWidth, type Color } from '@earendil-works/pi-tui'
 import { Array, Number, Order, pipe, String } from 'effect'
 
 export interface Segment {
-  /** Plain text: the whole row is dimmed uniformly across plugins. */
+  /** Plain text: dim by default, or rendered in the specified color. */
   readonly text: string
   readonly align: 'left' | 'right'
+  readonly color?: Color
 }
 
 const WIDGET_KEY = 'pi-plugins:statusline'
@@ -16,20 +18,20 @@ const REGISTRY_KEY = Symbol.for('@pi-plugins/statusline-registry')
 
 type Registry = Map<string, Segment>
 
-function side(segments: Registry, align: Segment['align']): string {
+function side(segments: Registry, align: Segment['align'], theme: Theme): string {
   return pipe(
     Array.fromIterable(segments),
     Array.filter(([, segment]) => segment.align === align),
     Array.sortBy(
       Order.mapInput(Order.String, ([key]: readonly [string, Segment]) => key),
     ),
-    Array.map(([, segment]) => segment.text),
-    Array.join(' · '),
+    Array.map(([, segment]) =>
+      segment.color === undefined
+        ? theme.fg('dim', segment.text)
+        : theme.style(segment.text, { fg: segment.color }),
+    ),
+    Array.join(theme.fg('dim', ' · ')),
   )
-}
-
-function textWidth(text: string): number {
-  return Array.fromIterable(text).length
 }
 
 export function setSegment(
@@ -58,13 +60,13 @@ export function setSegment(
   ctx.ui.setWidget(WIDGET_KEY, (_tui, theme) => ({
     invalidate: () => {},
     render: (width: number) => {
-      const left = side(segments, 'left')
-      const right = side(segments, 'right')
+      const left = side(segments, 'left', theme)
+      const right = side(segments, 'right', theme)
 
       // Left indented one column like pi's widget rows, right flush like pi's footer.
       const margin = Number.min(width, 1)
       const inner = width - margin
-      const gap = inner - textWidth(left) - textWidth(right)
+      const gap = inner - visibleWidth(left) - visibleWidth(right)
       const minGap = String.isNonEmpty(left) && String.isNonEmpty(right) ? 2 : 0
 
       const line =
@@ -73,13 +75,11 @@ export function setSegment(
           : pipe(
               [left, right],
               Array.filter(String.isNonEmpty),
-              Array.join(' · '),
-              Array.fromIterable,
-              Array.take(Number.max(inner, 0)),
-              Array.join(''),
+              Array.join(theme.fg('dim', ' · ')),
+              (text) => sliceByColumn(text, 0, Number.max(inner, 0)),
             )
 
-      return [String.repeat(margin)(' ') + theme.fg('dim', line)]
+      return [String.repeat(margin)(' ') + line]
     },
   }))
 }

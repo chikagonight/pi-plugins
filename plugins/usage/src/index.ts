@@ -8,6 +8,7 @@ import * as Zai from './provider/zai'
 import * as Report from './report'
 import * as UsageService from './usage-service'
 import * as Widget from './widget'
+import * as WidgetColors from './widget-colors'
 
 const EXTENSION_ID = 'usage'
 const REPORT_ENTRY_TYPE = 'usage-report'
@@ -71,6 +72,7 @@ export default function usage(pi: ExtensionAPI): void {
         Option.map((limits): Statusline.Segment => ({
           text: Widget.text(limits, DateTime.nowUnsafe()),
           align: 'right',
+          color: WidgetColors.PROVIDER_COLORS[provider],
         })),
       )
       Statusline.setSegment(
