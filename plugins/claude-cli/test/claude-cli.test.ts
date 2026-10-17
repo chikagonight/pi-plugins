@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -170,6 +170,7 @@ const run = async (
   const received: {
     pid: number
     startedAt: number
+    cwd: string
     args: Array<string>
     env: Record<string, string | undefined>
     systemPrompt: string
@@ -414,6 +415,26 @@ describe('stream', () => {
       assert.isUndefined(received.env['ANTHROPIC_API_KEY'])
     } finally {
       delete process.env['ANTHROPIC_API_KEY']
+    }
+  })
+
+  it("runs Claude Code in pi's working directory after it was moved", async () => {
+    const previous = process.cwd()
+    const workspace = await mkdtemp(join(tmpdir(), 'claude-cli-workspace-'))
+    process.chdir(workspace)
+    // As pi does at startup. Node caches the path from then on.
+    process.cwd()
+    await rename(workspace, `${workspace}-moved`)
+    try {
+      const { message, received } = await run([reply('msg_1', 'Hi')], {
+        messages: [user('Hi')],
+      })
+
+      assert.strictEqual(message.stopReason, 'stop')
+      assert.strictEqual(received.cwd, await realpath(`${workspace}-moved`))
+    } finally {
+      process.chdir(previous)
+      await rm(`${workspace}-moved`, { recursive: true, force: true })
     }
   })
 

@@ -165,7 +165,6 @@ const SessionId = Schema.String.check(Schema.isUUID())
 
 // How a `claude` process is started, apart from its system prompt file.
 type Setup = {
-  readonly cwd: string
   readonly systemPrompt: string
   readonly args: ReadonlyArray<string>
   readonly env: Record<string, string | undefined>
@@ -219,7 +218,9 @@ export class ClaudeCli extends Context.Service<ClaudeCli>()(
                 'claude',
                 [...setup.args, '--system-prompt-file', systemPromptFile],
                 {
-                  cwd: setup.cwd,
+                  // Inherits pi's working directory. Node caches
+                  // `process.cwd()`, which still names the old path after
+                  // the directory is moved.
                   extendEnv: true,
                   env: setup.env,
                   stdin: Stream.fromQueue(input).pipe(
@@ -320,7 +321,6 @@ export class ClaudeCli extends Context.Service<ClaudeCli>()(
         )
 
         const setup: Setup = {
-          cwd: process.cwd(),
           systemPrompt: pipe(
             system,
             Array.flatMapNullishOr(({ text }) => text),

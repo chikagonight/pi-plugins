@@ -23,6 +23,7 @@ const reply = replies[Math.min(run, replies.length - 1)]
 const log = {
   pid: process.pid,
   startedAt: Date.now(),
+  cwd: process.cwd(),
   args,
   env: process.env,
   systemPrompt: readFileSync(option('--system-prompt-file'), 'utf8'),
