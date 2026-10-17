@@ -42,11 +42,12 @@
   "scripts": {
     "prepack": "pnpm run build",
     "build": "tsdown",
-    "check": "pnpm run lint && pnpm run check-types && pnpm run format:check",
+    "check": "pnpm run lint && pnpm run check-types && pnpm run format:check && pnpm run test",
     "check-types": "tsc -b",
     "lint": "oxlint",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "test": "node --test test/*.test.ts"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.99.1",

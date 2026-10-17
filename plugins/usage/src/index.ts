@@ -9,27 +9,21 @@ import * as Report from './report'
 import * as UsageService from './usage-service'
 import * as Widget from './widget'
 import * as WidgetColors from './widget-colors'
+import * as WidgetProviders from './widget-providers'
 
 const EXTENSION_ID = 'usage'
 const REPORT_ENTRY_TYPE = 'usage-report'
 
 const UsageConfig = Schema.Struct({
   showWidget: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(true))),
-  widgetProviders: Schema.Array(Schema.String).pipe(
-    Schema.withDecodingDefault(Effect.succeed(['claude', 'codex'] as const)),
+  widgetProviders: Schema.Array(Schema.Unknown).pipe(
+    Schema.withDecodingDefault(
+      Effect.succeed(WidgetProviders.DEFAULT_WIDGET_PROVIDERS),
+    ),
   ),
 })
 
-type WidgetProvider = 'claude' | 'codex' | Zai.Provider
-
-function isWidgetProvider(provider: string): provider is WidgetProvider {
-  return (
-    provider === 'claude' ||
-    provider === 'codex' ||
-    provider === 'zai' ||
-    provider === 'zai-coding-cn'
-  )
-}
+type WidgetProvider = WidgetProviders.WidgetProvider
 
 function section<A>(
   title: string,
@@ -63,7 +57,9 @@ export default function usage(pi: ExtensionAPI): void {
       return
     }
     Statusline.setSegment(ctx, EXTENSION_ID, undefined)
-    const providers = new Set(config.widgetProviders.filter(isWidgetProvider))
+    const providers = new Set(
+      WidgetProviders.selectWidgetProviders(config.widgetProviders),
+    )
     for (const provider of ['claude', 'codex', 'zai', 'zai-coding-cn'] as const) {
       const segment = pipe(
         Option.fromNullishOr(limitsCache.get(provider)),
@@ -90,7 +86,7 @@ export default function usage(pi: ExtensionAPI): void {
     }
 
     await Promise.all(
-      [...new Set(config.widgetProviders.filter(isWidgetProvider))].map(
+      WidgetProviders.selectWidgetProviders(config.widgetProviders).map(
         async (provider) => {
           if (inFlight.has(provider)) {
             return

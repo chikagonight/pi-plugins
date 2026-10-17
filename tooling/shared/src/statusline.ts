@@ -18,6 +18,10 @@ const REGISTRY_KEY = Symbol.for('@pi-plugins/statusline-registry')
 
 type Registry = Map<string, Segment>
 
+export function textWidth(text: string): number {
+  return visibleWidth(text)
+}
+
 function side(segments: Registry, align: Segment['align'], theme: Theme): string {
   return pipe(
     Array.fromIterable(segments),
@@ -66,7 +70,7 @@ export function setSegment(
       // Left indented one column like pi's widget rows, right flush like pi's footer.
       const margin = Number.min(width, 1)
       const inner = width - margin
-      const gap = inner - visibleWidth(left) - visibleWidth(right)
+      const gap = inner - textWidth(left) - textWidth(right)
       const minGap = String.isNonEmpty(left) && String.isNonEmpty(right) ? 2 : 0
 
       const line =
